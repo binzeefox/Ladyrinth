@@ -42,4 +42,43 @@
             android:id="@+id/maze_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
+
+    <LinearLayout
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        <Button
+                android:id="@+id/button_left"
+                android:text="向左"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"/>
+
+        <LinearLayout
+                android:orientation="vertical"
+                android:layout_weight="2"
+                android:layout_width="0dp"
+                android:layout_height="match_parent">
+
+            <Button
+                    android:id="@+id/button_top"
+                    android:text="向上"
+                    android:layout_weight="1"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"/>
+            <Button
+                    android:id="@+id/button_bottom"
+                    android:text="向下"
+                    android:layout_weight="1"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"/>
+        </LinearLayout>
+        <Button
+                android:id="@+id/button_right"
+                android:text="向右"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"/>
+    </LinearLayout>
 </LinearLayout>

@@ -1,12 +1,8 @@
 package com.example.tongxiwen.ladyrinth;
 
 import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Path;
+import android.graphics.*;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import com.example.tongxiwen.ladyrinth.innerbox.Ladyrinth;
 import com.example.tongxiwen.ladyrinth.innerbox.MazeBox;
@@ -18,12 +14,24 @@ import java.util.Map;
  */
 public class LadyrinthView extends View {
 
-    Ladyrinth ladyrinth;
+    private boolean reset = true;
+    private Path mazePath;
+
+    private MazeBox myPos;
+    private Ladyrinth ladyrinth;
     private int mazeSize = 16;
     private float minUnit;
     private Paint mPaint;
+    private Paint fillPaint;
     private Map<String, MazeBox> boxMap;
     private float width;
+
+    private OnWinnerWatcher watcher = new OnWinnerWatcher() {
+        @Override
+        public void onWin() {
+
+        }
+    };
 
     public LadyrinthView(Context context) {
         this(context, null, 0);
@@ -35,11 +43,19 @@ public class LadyrinthView extends View {
         super(context, attrs, defStyleAttr);
 
         ladyrinth = new Ladyrinth(mazeSize);
+        mazePath = new Path();
+
         mPaint = new Paint();
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setColor(Color.BLACK);
         mPaint.setStrokeWidth(5);
         boxMap = ladyrinth.getMaze();
+
+        fillPaint = new Paint();
+        fillPaint.setStyle(Paint.Style.FILL);
+        fillPaint.setColor(Color.RED);
+
+        resetMyPos();
     }
 
     @Override
@@ -53,11 +69,17 @@ public class LadyrinthView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-
-        for (String key : boxMap.keySet()){
-            MazeBox box = boxMap.get(key);
-            canvas.drawPath(getPath(box), mPaint);
+        if (reset) {
+            mazePath.reset();
+            for (String key : boxMap.keySet()) {
+                MazeBox box = boxMap.get(key);
+                canvas.drawPath(getPath(box), mPaint);
+            }
+        } else {
+            canvas.drawPath(mazePath, mPaint);
         }
+
+        drawMyPos(canvas);
     }
 
     /**
@@ -92,6 +114,7 @@ public class LadyrinthView extends View {
             path.moveTo(x+minUnit, y);
             path.lineTo(x+minUnit, y+minUnit);
         }
+        mazePath.addPath(path);
         return path;
     }
 
@@ -111,6 +134,8 @@ public class LadyrinthView extends View {
     public void reset(){
         ladyrinth.reset();
         boxMap = ladyrinth.getMaze();
+        resetMyPos();
+        reset = true;
         invalidate();
     }
 
@@ -119,5 +144,87 @@ public class LadyrinthView extends View {
      */
     public int getMazeSize() {
         return mazeSize;
+    }
+
+    /**********************************************操作相关**************************************************/
+
+    /**
+     * 重置角色位置
+     */
+    private void resetMyPos() {
+        myPos = boxMap.get("0|0");
+    }
+
+    /**
+     * 移动角色
+     */
+    public void moveMyPos(int direction){
+        int x = myPos.getPos()[0];
+        int y = myPos.getPos()[1];
+
+        if (x == mazeSize - 1 && y == mazeSize - 1){
+            return;
+        }
+
+        boolean[] flags = myPos.getFlags();
+        boolean flag0 = flags[0];
+        boolean flag1 = flags[1];
+        boolean flag2 = flags[2];
+        boolean flag3 = flags[3];
+
+        String key = "0|0";
+        switch (direction){
+            case 0:
+                if (flag0){
+                    key = x + "|" + (y-1);
+                    myPos = boxMap.get(key);
+                }
+                break;
+            case 1:
+                if (flag1){
+                    key = (x-1) + "|" + y;
+                    myPos = boxMap.get(key);
+                }
+                break;
+            case 2:
+                if (flag2){
+                    key = x + "|" + (y+1);
+                    myPos = boxMap.get(key);
+                }
+                break;
+            case 3:
+                if (flag3){
+                    key = (x+1) + "|" + y;
+                    myPos = boxMap.get(key);
+                }
+                break;
+            default:
+                break;
+        }
+        if (myPos.getPos()[0] == mazeSize - 1 && myPos.getPos()[1] == mazeSize - 1){
+            watcher.onWin();
+        }
+        reset = false;
+        invalidate();
+    }
+
+    /**
+     * 绘制角色
+     */
+    private void drawMyPos(Canvas canvas) {
+        float x = myPos.getPos()[0] * minUnit;
+        float y = myPos.getPos()[1] * minUnit;
+
+        RectF rectF = new RectF(x,y,x+minUnit, y+minUnit);
+        canvas.drawRect(rectF, fillPaint);
+    }
+
+
+    public void addOnWinnerWatcher(OnWinnerWatcher watcher){
+        this.watcher = watcher;
+    }
+
+    public interface OnWinnerWatcher {
+        void onWin();
     }
 }
